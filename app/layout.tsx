@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
 import { Geist } from "next/font/google";
+import { CartSidebar } from "@/components/cart-sidebar";
 import { Toaster } from "@/components/ui/sonner";
 import { cn } from "@/lib/utils";
 import "./globals.css";
@@ -20,6 +21,7 @@ export default function RootLayout({
       <html lang="fr" className={cn("font-sans", geist.variable)}>
         <body className="antialiased">
           {children}
+          <CartSidebar />
           <Toaster />
         </body>
       </html>
