@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { getCurrentPlayerProfile } from "@/server/actions/player-profile";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -26,7 +27,7 @@ export default async function MyRequestsPage() {
       {requests.length === 0 ? (
         <p className="text-muted-foreground">
           Tu n&apos;as encore envoyé aucune demande. Va sur{" "}
-          <a href="/teams" className="underline">Rechercher une équipe</a>.
+          <Link href="/teams" className="underline">Rechercher une équipe</Link>.
         </p>
       ) : (
         <div className="space-y-4">
