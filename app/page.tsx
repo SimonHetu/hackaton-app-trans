@@ -18,6 +18,9 @@ export default async function Home() {
               <Link href="/profile" className="text-sm font-medium text-zinc-700 hover:text-zinc-950">
                 Profil
               </Link>
+              <Link href="/cart" className="text-sm font-medium text-zinc-700 hover:text-zinc-950">
+                Panier
+              </Link>
               <Link href="/dashboard" className="text-sm font-medium text-zinc-700 hover:text-zinc-950">
                 Dashboard
               </Link>
@@ -63,6 +66,12 @@ export default async function Home() {
                 className="inline-flex h-11 w-fit items-center rounded-md border border-zinc-300 px-5 text-sm font-medium hover:bg-zinc-100"
               >
                 Ouvrir le dashboard
+              </Link>
+              <Link
+                href="/cart"
+                className="inline-flex h-11 w-fit items-center rounded-md border border-zinc-300 px-5 text-sm font-medium hover:bg-zinc-100"
+              >
+                Voir mon panier
               </Link>
             </div>
           ) : (
