@@ -15,6 +15,9 @@ export default async function Home() {
           </Link>
           {isSignedIn ? (
             <div className="flex items-center gap-4">
+              <Link href="/profile" className="text-sm font-medium text-zinc-700 hover:text-zinc-950">
+                Profil
+              </Link>
               <Link href="/dashboard" className="text-sm font-medium text-zinc-700 hover:text-zinc-950">
                 Dashboard
               </Link>
@@ -48,12 +51,20 @@ export default async function Home() {
           </div>
 
           {isSignedIn ? (
-            <Link
-              href="/dashboard"
-              className="inline-flex h-11 w-fit items-center rounded-md bg-zinc-950 px-5 text-sm font-medium text-white hover:bg-zinc-800"
-            >
-              Ouvrir le dashboard
-            </Link>
+            <div className="flex flex-wrap gap-3">
+              <Link
+                href="/profile"
+                className="inline-flex h-11 w-fit items-center rounded-md bg-zinc-950 px-5 text-sm font-medium text-white hover:bg-zinc-800"
+              >
+                Completer mon profil
+              </Link>
+              <Link
+                href="/dashboard"
+                className="inline-flex h-11 w-fit items-center rounded-md border border-zinc-300 px-5 text-sm font-medium hover:bg-zinc-100"
+              >
+                Ouvrir le dashboard
+              </Link>
+            </div>
           ) : (
             <div className="flex flex-wrap gap-3">
               <SignUpButton mode="modal">
