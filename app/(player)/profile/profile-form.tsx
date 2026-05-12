@@ -17,9 +17,9 @@ import {
 import { Card, CardContent } from "@/components/ui/card";
 import {
   playerProfileSchema,
-  PlayerProfileInput,
-} from "@/lib/validations/player-profile";
-import { updatePlayerProfile } from "@/server/actions/player-profile";
+  type PlayerProfileInput,
+} from "@/server/validations/player-profile";
+import { upsertPlayerProfile } from "@/server/actions/player-profile";
 
 export function ProfileForm({ defaultValues }: { defaultValues: PlayerProfileInput }) {
   const [isPending, startTransition] = useTransition();
@@ -37,9 +37,13 @@ export function ProfileForm({ defaultValues }: { defaultValues: PlayerProfileInp
 
   const onSubmit = (data: PlayerProfileInput) => {
     startTransition(async () => {
-      const res = await updatePlayerProfile(data);
-      if (res.success) toast.success("Profil mis à jour");
-      else toast.error("Erreur lors de la sauvegarde");
+      try {
+        await upsertPlayerProfile(data);
+        toast.success("Profil mis à jour");
+      } catch (err) {
+        toast.error("Erreur lors de la sauvegarde");
+        console.error(err);
+      }
     });
   };
 
@@ -47,14 +51,6 @@ export function ProfileForm({ defaultValues }: { defaultValues: PlayerProfileInp
     <Card>
       <CardContent className="pt-6">
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <div>
-            <Label htmlFor="fullName">Nom complet</Label>
-            <Input id="fullName" {...register("fullName")} />
-            {errors.fullName && (
-              <p className="text-sm text-red-500 mt-1">{errors.fullName.message}</p>
-            )}
-          </div>
-
           <div>
             <Label htmlFor="city">Ville</Label>
             <Input id="city" {...register("city")} />
@@ -65,9 +61,15 @@ export function ProfileForm({ defaultValues }: { defaultValues: PlayerProfileInp
 
           <div>
             <Label htmlFor="favoriteSport">Sport préféré</Label>
-            <Input id="favoriteSport" {...register("favoriteSport")} placeholder="Football, Basketball..." />
+            <Input
+              id="favoriteSport"
+              {...register("favoriteSport")}
+              placeholder="Football, Basketball..."
+            />
             {errors.favoriteSport && (
-              <p className="text-sm text-red-500 mt-1">{errors.favoriteSport.message}</p>
+              <p className="text-sm text-red-500 mt-1">
+                {errors.favoriteSport.message}
+              </p>
             )}
           </div>
 
@@ -75,7 +77,9 @@ export function ProfileForm({ defaultValues }: { defaultValues: PlayerProfileInp
             <Label>Niveau</Label>
             <Select
               value={watch("level")}
-              onValueChange={(v) => setValue("level", v as PlayerProfileInput["level"])}
+              onValueChange={(v) =>
+                setValue("level", v as PlayerProfileInput["level"])
+              }
             >
               <SelectTrigger>
                 <SelectValue />
@@ -90,7 +94,11 @@ export function ProfileForm({ defaultValues }: { defaultValues: PlayerProfileInp
 
           <div>
             <Label htmlFor="position">Poste préféré (optionnel)</Label>
-            <Input id="position" {...register("position")} placeholder="Attaquant, Gardien..." />
+            <Input
+              id="position"
+              {...register("position")}
+              placeholder="Attaquant, Gardien..."
+            />
           </div>
 
           <Button type="submit" disabled={isPending} className="w-full">

@@ -3,7 +3,7 @@ import { headers } from "next/headers";
 import { prisma } from "@/lib/prisma";
 
 type ClerkEvent = {
-  type: "user.created" | "user.updated" | "user.deleted" | string;
+  type: string;
   data: {
     id: string;
     email_addresses?: { email_address: string }[];
@@ -14,13 +14,10 @@ type ClerkEvent = {
 
 export async function POST(req: Request) {
   const secret = process.env.CLERK_WEBHOOK_SECRET;
-  if (!secret) {
-    return new Response("Missing CLERK_WEBHOOK_SECRET", { status: 500 });
-  }
+  if (!secret) return new Response("Missing CLERK_WEBHOOK_SECRET", { status: 500 });
 
   const payload = await req.text();
   const h = await headers();
-
   const svixId = h.get("svix-id");
   const svixTimestamp = h.get("svix-timestamp");
   const svixSignature = h.get("svix-signature");
