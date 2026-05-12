@@ -1,11 +1,12 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import Link from "next/link";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
-import { createJoinRequest } from "@/server/actions/join-requests";
+import { addTeamToCart } from "@/server/actions/payments";
 
 type ExistingRequest = {
   id: string;
@@ -53,10 +54,15 @@ export function JoinTeamButton({
         <CardContent className="pt-6 space-y-2">
           <p className={`font-medium ${color}`}>{text}</p>
           {existingRequest.paymentStatus === "PENDING" && (
-            <p className="text-sm text-muted-foreground">⏳ En attente de paiement.</p>
+            <div className="space-y-3">
+              <p className="text-sm text-muted-foreground">En attente de paiement.</p>
+              <Button asChild variant="outline">
+                <Link href="/cart">Voir mon panier</Link>
+              </Button>
+            </div>
           )}
           {existingRequest.paymentStatus === "PAID" && (
-            <p className="text-sm text-muted-foreground">✓ Paiement confirmé.</p>
+            <p className="text-sm text-muted-foreground">Paiement confirme.</p>
           )}
         </CardContent>
       </Card>
@@ -76,12 +82,7 @@ export function JoinTeamButton({
   const handleJoin = () => {
     startTransition(async () => {
       try {
-        const result = await createJoinRequest({ teamId, message });
-        if (result?.checkoutUrl) {
-          // Tournoi payant : redirection vers Stripe
-          window.location.href = result.checkoutUrl;
-          return;
-        }
+        await addTeamToCart({ teamId });
         toast.success("Demande envoyée !");
         setShowForm(false);
         setMessage("");
