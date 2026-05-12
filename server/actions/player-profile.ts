@@ -43,4 +43,33 @@ async function requireCurrentDatabaseUser() {
     data: {
       clerkId: userId,
       email,
-      fullName: clerkUser.fullName || clerkU
+      fullName: clerkUser.fullName || clerkUser.username || email,
+    },
+  });
+}
+
+export async function getCurrentPlayerProfile() {
+  const user = await requireCurrentDatabaseUser();
+  const playerProfile = await prisma.playerProfile.findUnique({
+    where: { userId: user.id },
+  });
+  return { user, playerProfile };
+}
+
+export async function upsertPlayerProfile(input: PlayerProfileInput | FormData) {
+  const user = await requireCurrentDatabaseUser();
+  const parsedInput = playerProfileSchema.parse(
+    input instanceof FormData ? formDataToProfileInput(input) : input,
+  );
+
+  const playerProfile = await prisma.playerProfile.upsert({
+    where: { userId: user.id },
+    create: { userId: user.id, ...parsedInput },
+    update: parsedInput,
+  });
+
+  revalidatePath("/profile");
+  revalidatePath("/dashboard");
+
+  return playerProfile;
+}
