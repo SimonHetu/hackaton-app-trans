@@ -2,12 +2,17 @@
 
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
-import { prisma } from "@/prisma/lib/prisma";
+import { prisma } from "@/lib/prisma";
+
+import {
+  playerProfileSchema,
+  type PlayerProfileInput,
+} from "@/server/validations/player-profile";
+
 import {
   playerProfileSchema as profileFormSchema,
   type PlayerProfileInput as ProfileFormInput,
 } from "@/lib/validations/player-profile";
-import { playerProfileSchema, type PlayerProfileInput } from "@/server/validations/player-profile";
 
 function formDataToProfileInput(formData: FormData): Record<string, unknown> {
   return {
@@ -21,23 +26,21 @@ function formDataToProfileInput(formData: FormData): Record<string, unknown> {
 function getPrimaryEmailAddress(
   user: Awaited<ReturnType<typeof currentUser>>,
 ) {
-  return user?.primaryEmailAddress?.emailAddress ?? user?.emailAddresses[0]?.emailAddress;
+  return (
+    user?.primaryEmailAddress?.emailAddress ??
+    user?.emailAddresses[0]?.emailAddress
+  );
 }
 
 async function requireCurrentDatabaseUser() {
   const { userId } = await auth();
-
-  if (!userId) {
-    throw new Error("Unauthorized");
-  }
+  if (!userId) throw new Error("Unauthorized");
 
   const existingUser = await prisma.user.findUnique({
     where: { clerkId: userId },
   });
 
-  if (existingUser) {
-    return existingUser;
-  }
+  if (existingUser) return existingUser;
 
   const clerkUser = await currentUser();
   const email = getPrimaryEmailAddress(clerkUser);
@@ -62,24 +65,19 @@ export async function getCurrentPlayerProfile() {
     where: { userId: user.id },
   });
 
-  return {
-    user,
-    playerProfile,
-  };
+  return { user, playerProfile };
 }
 
 export async function upsertPlayerProfile(input: PlayerProfileInput | FormData) {
   const user = await requireCurrentDatabaseUser();
+
   const parsedInput = playerProfileSchema.parse(
     input instanceof FormData ? formDataToProfileInput(input) : input,
   );
 
   const playerProfile = await prisma.playerProfile.upsert({
     where: { userId: user.id },
-    create: {
-      userId: user.id,
-      ...parsedInput,
-    },
+    create: { userId: user.id, ...parsedInput },
     update: parsedInput,
   });
 
@@ -92,6 +90,7 @@ export async function upsertPlayerProfile(input: PlayerProfileInput | FormData) 
 export async function updatePlayerProfile(input: ProfileFormInput) {
   try {
     const user = await requireCurrentDatabaseUser();
+
     const parsedInput = profileFormSchema.parse(input);
     const { fullName, position, ...profileInput } = parsedInput;
 
