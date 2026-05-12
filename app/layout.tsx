@@ -1,6 +1,11 @@
 import type { Metadata } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
+import { Geist } from "next/font/google";
+import { Toaster } from "@/components/ui/sonner";
+import { cn } from "@/lib/utils";
 import "./globals.css";
+
+const geist = Geist({ subsets: ["latin"], variable: "--font-sans" });
 
 export const metadata: Metadata = {
   title: "Ligues Sportives",
@@ -12,8 +17,11 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <ClerkProvider>
-      <html lang="fr">
-        <body className="antialiased">{children}</body>
+      <html lang="fr" className={cn("font-sans", geist.variable)}>
+        <body className="antialiased">
+          {children}
+          <Toaster />
+        </body>
       </html>
     </ClerkProvider>
   );
