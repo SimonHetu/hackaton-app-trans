@@ -19,11 +19,9 @@ export function TeamsFilters() {
     const city = form.get("city")?.toString().trim();
     const sport = form.get("sport")?.toString().trim();
     const available = form.get("available") === "on";
-
     if (city) params.set("city", city);
     if (sport) params.set("sport", sport);
     if (available) params.set("available", "true");
-
     startTransition(() => router.push(`/teams?${params.toString()}`));
   };
 
@@ -32,14 +30,14 @@ export function TeamsFilters() {
   return (
     <form
       onSubmit={handleSubmit}
-      className="flex flex-wrap items-end gap-4 p-4 border rounded-lg bg-gray-50"
+      className="flex flex-wrap items-end gap-4 p-4 border rounded-lg bg-card"
     >
       <div className="flex-1 min-w-[150px]">
-        <Label htmlFor="city">Ville</Label>
+        <Label htmlFor="city" className="mb-2 block">Ville</Label>
         <Input id="city" name="city" defaultValue={searchParams.get("city") ?? ""} />
       </div>
       <div className="flex-1 min-w-[150px]">
-        <Label htmlFor="sport">Sport</Label>
+        <Label htmlFor="sport" className="mb-2 block">Sport</Label>
         <Input id="sport" name="sport" defaultValue={searchParams.get("sport") ?? ""} />
       </div>
       <div className="flex items-center gap-2 pb-2">
