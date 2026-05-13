@@ -2,6 +2,7 @@ import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { getStripe } from "@/lib/stripe";
 import { completePaidJoinRequests } from "@/server/services/join-requests";
+import { stripeSessionMetadataSchema } from "@/server/validations/webhooks";
 
 export const runtime = "nodejs";
 
@@ -30,11 +31,7 @@ export async function POST(req: Request) {
 
   if (event.type === "checkout.session.completed") {
     const session = event.data.object;
-    const joinRequestIds = session.metadata?.joinRequestIds
-      ? (JSON.parse(session.metadata.joinRequestIds) as string[])
-      : session.metadata?.joinRequestId
-        ? [session.metadata.joinRequestId]
-        : [];
+    const joinRequestIds = stripeSessionMetadataSchema.parse(session.metadata ?? {});
 
     if (joinRequestIds.length > 0 && session.payment_status === "paid") {
       const { teamIds } = await completePaidJoinRequests(joinRequestIds, session.id);

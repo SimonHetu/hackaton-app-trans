@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentPlayerProfile } from "@/server/actions/player-profile";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { matchesSearchParamsSchema } from "@/server/validations/pages";
 import { MatchesFilter } from "./matches-filter";
 
 type SearchParams = Promise<{ filter?: string }>;
@@ -11,7 +12,7 @@ export default async function MatchesPage({
 }: {
   searchParams: SearchParams;
 }) {
-  const { filter } = await searchParams;
+  const { filter } = matchesSearchParamsSchema.parse(await searchParams);
   const { user } = await getCurrentPlayerProfile();
 
   // Récupère les équipes dont le user est membre

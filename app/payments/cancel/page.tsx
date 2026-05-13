@@ -1,12 +1,13 @@
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { paymentCancelSearchParamsSchema } from "@/server/validations/pages";
 
 type PaymentCancelPageProps = {
   searchParams: Promise<{ teamId?: string }>;
 };
 
 export default async function PaymentCancelPage({ searchParams }: PaymentCancelPageProps) {
-  const { teamId } = await searchParams;
+  const { teamId } = paymentCancelSearchParamsSchema.parse(await searchParams);
 
   return (
     <main className="mx-auto flex min-h-screen max-w-xl items-center p-6">

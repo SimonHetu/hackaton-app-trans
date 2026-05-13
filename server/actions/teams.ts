@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { requireRole } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { teamSchema, type TeamInput } from "@/server/validations/team";
+import { idSchema } from "@/server/validations/common";
 
 export async function createTeam(input: TeamInput) {
   const user = await requireRole("ORGANIZER");
@@ -32,9 +33,10 @@ export async function createTeam(input: TeamInput) {
 
 export async function deleteTeam(id: string) {
   const user = await requireRole("ORGANIZER");
+  const parsedId = idSchema.parse(id);
 
   const team = await prisma.team.findUnique({
-    where: { id },
+    where: { id: parsedId },
     include: { tournament: true, _count: { select: { members: true } } },
   });
   if (!team) throw new Error("Équipe introuvable");
@@ -45,6 +47,6 @@ export async function deleteTeam(id: string) {
     throw new Error("Impossible de supprimer une équipe avec des joueurs");
   }
 
-  await prisma.team.delete({ where: { id } });
+  await prisma.team.delete({ where: { id: parsedId } });
   revalidatePath(`/tournaments/${team.tournamentId}`);
 }

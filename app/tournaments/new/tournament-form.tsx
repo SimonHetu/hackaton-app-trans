@@ -11,31 +11,60 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { tournamentSchema } from "@/server/validations/tournament";
-import { createTournament } from "@/server/actions/tournaments";
+import { createTournament, updateTournament } from "@/server/actions/tournaments";
 
 type FormValues = z.input<typeof tournamentSchema>;
 
-export function TournamentForm() {
+type TournamentFormProps = {
+  mode?: "create" | "edit";
+  tournamentId?: string;
+  defaultValues?: FormValues;
+};
+
+function formatDateInputValue(value: Date | string) {
+  return new Date(value).toISOString().slice(0, 10);
+}
+
+export function TournamentForm({
+  mode = "create",
+  tournamentId,
+  defaultValues,
+}: TournamentFormProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
+  const isEdit = mode === "edit";
+  const initialValues = defaultValues
+    ? {
+        ...defaultValues,
+        startDate: formatDateInputValue(defaultValues.startDate as Date | string),
+      }
+    : {
+        name: "",
+        sport: "",
+        city: "",
+        startDate: formatDateInputValue(new Date()),
+        entryFee: 0,
+        currency: "CAD",
+      };
 
   const { register, handleSubmit, formState: { errors } } = useForm<FormValues>({
     resolver: zodResolver(tournamentSchema),
-    defaultValues: {
-      name: "",
-      sport: "",
-      city: "",
-      startDate: new Date(),
-      entryFee: 0,
-      currency: "CAD",
-    },
+    defaultValues: initialValues,
   });
 
   const onSubmit = (data: FormValues) => {
     startTransition(async () => {
       try {
+        if (isEdit) {
+          if (!tournamentId) throw new Error("Tournoi introuvable");
+          await updateTournament(tournamentId, data as never);
+          toast.success("Tournoi mis a jour !");
+          router.refresh();
+          return;
+        }
+
         await createTournament(data as never);
-        toast.success("Tournoi créé !");
+        toast.success("Tournoi cree !");
         router.push("/tournaments");
       } catch (err) {
         toast.error(err instanceof Error ? err.message : "Erreur");
@@ -87,11 +116,15 @@ export function TournamentForm() {
 
           <div className="flex gap-2 pt-4">
             <Button type="submit" disabled={isPending} className="flex-1">
-              {isPending ? "Création..." : "Créer le tournoi"}
+              {isPending
+                ? isEdit ? "Mise a jour..." : "Creation..."
+                : isEdit ? "Mettre a jour le tournoi" : "Creer le tournoi"}
             </Button>
-            <Button type="button" variant="outline" onClick={() => router.push("/tournaments")}>
-              Annuler
-            </Button>
+            {!isEdit && (
+              <Button type="button" variant="outline" onClick={() => router.push("/tournaments")}>
+                Annuler
+              </Button>
+            )}
           </div>
         </form>
       </CardContent>
