@@ -1,16 +1,7 @@
 import { Webhook } from "svix";
 import { headers } from "next/headers";
 import { prisma } from "@/lib/prisma";
-
-type ClerkEvent = {
-  type: "user.created" | "user.updated" | "user.deleted" | string;
-  data: {
-    id: string;
-    email_addresses?: { email_address: string }[];
-    first_name?: string | null;
-    last_name?: string | null;
-  };
-};
+import { clerkWebhookEventSchema, type ClerkWebhookEvent } from "@/server/validations/webhooks";
 
 export async function POST(req: Request) {
   const secret = process.env.CLERK_WEBHOOK_SECRET;
@@ -29,14 +20,16 @@ export async function POST(req: Request) {
     return new Response("Missing svix headers", { status: 400 });
   }
 
-  let evt: ClerkEvent;
+  let evt: ClerkWebhookEvent;
   try {
     const wh = new Webhook(secret);
-    evt = wh.verify(payload, {
-      "svix-id": svixId,
-      "svix-timestamp": svixTimestamp,
-      "svix-signature": svixSignature,
-    }) as ClerkEvent;
+    evt = clerkWebhookEventSchema.parse(
+      wh.verify(payload, {
+        "svix-id": svixId,
+        "svix-timestamp": svixTimestamp,
+        "svix-signature": svixSignature,
+      }),
+    );
   } catch (err) {
     console.error("Webhook signature verification failed:", err);
     return new Response("Invalid signature", { status: 400 });

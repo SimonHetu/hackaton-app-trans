@@ -4,22 +4,20 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { prisma } from "@/lib/prisma";
 import { getStripe } from "@/lib/stripe";
 import { completePaidJoinRequests } from "@/server/services/join-requests";
+import { paymentSuccessSearchParamsSchema } from "@/server/validations/pages";
+import { stripeSessionMetadataSchema } from "@/server/validations/webhooks";
 
 type PaymentSuccessPageProps = {
   searchParams: Promise<{ session_id?: string }>;
 };
 
 export default async function PaymentSuccessPage({ searchParams }: PaymentSuccessPageProps) {
-  const { session_id: sessionId } = await searchParams;
+  const { session_id: sessionId } = paymentSuccessSearchParamsSchema.parse(await searchParams);
   let teamId: string | null = null;
 
   if (sessionId) {
     const session = await getStripe().checkout.sessions.retrieve(sessionId);
-    const joinRequestIds = session.metadata?.joinRequestIds
-      ? (JSON.parse(session.metadata.joinRequestIds) as string[])
-      : session.metadata?.joinRequestId
-        ? [session.metadata.joinRequestId]
-        : [];
+    const joinRequestIds = stripeSessionMetadataSchema.parse(session.metadata ?? {});
 
     if (joinRequestIds.length > 0 && session.payment_status === "paid") {
       await completePaidJoinRequests(joinRequestIds, session.id);

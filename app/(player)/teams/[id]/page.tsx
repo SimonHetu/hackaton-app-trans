@@ -13,6 +13,7 @@ import { requireAuth } from "@/lib/auth";
 import { formatEntryFee } from "@/lib/money";
 import { prisma } from "@/lib/prisma";
 import { addTeamToCart } from "@/server/actions/payments";
+import { idRouteParamsSchema, teamDetailsSearchParamsSchema } from "@/server/validations/pages";
 
 type TeamDetailsPageProps = {
   params: Promise<{ id: string }>;
@@ -30,8 +31,8 @@ export default async function TeamDetailsPage({
   searchParams,
 }: TeamDetailsPageProps) {
   const [{ id }, { status }, user] = await Promise.all([
-    params,
-    searchParams,
+    params.then((value) => idRouteParamsSchema.parse(value)),
+    searchParams.then((value) => teamDetailsSearchParamsSchema.parse(value)),
     requireAuth(),
   ]);
 

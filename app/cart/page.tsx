@@ -12,13 +12,17 @@ import { requireAuth } from "@/lib/auth";
 import { formatEntryFee } from "@/lib/money";
 import { prisma } from "@/lib/prisma";
 import { createCartCheckoutSession, removeCartItem } from "@/server/actions/payments";
+import { cartSearchParamsSchema } from "@/server/validations/pages";
 
 type CartPageProps = {
   searchParams: Promise<{ status?: string }>;
 };
 
 export default async function CartPage({ searchParams }: CartPageProps) {
-  const [user, { status }] = await Promise.all([requireAuth(), searchParams]);
+  const [user, { status }] = await Promise.all([
+    requireAuth(),
+    searchParams.then((value) => cartSearchParamsSchema.parse(value)),
+  ]);
 
   const cartItems = await prisma.joinRequest.findMany({
     where: {

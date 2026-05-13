@@ -7,13 +7,15 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { CreateTeamForm } from "./create-team-form";
 import { DeleteTeamButton } from "./delete-team-button";
+import { TournamentForm } from "../new/tournament-form";
+import { idRouteParamsSchema } from "@/server/validations/pages";
 
 export default async function TournamentDetailPage({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
-  const { id } = await params;
+  const { id } = idRouteParamsSchema.parse(await params);
   const user = await requireRole("ORGANIZER");
 
   const tournament = await prisma.tournament.findUnique({
@@ -56,6 +58,26 @@ export default async function TournamentDetailPage({
           {tournament.sport} · {tournament.city} · {tournament.startDate.toLocaleDateString("fr-CA")}
         </p>
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Modifier le tournoi</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <TournamentForm
+            mode="edit"
+            tournamentId={tournament.id}
+            defaultValues={{
+              name: tournament.name,
+              sport: tournament.sport,
+              city: tournament.city,
+              startDate: tournament.startDate,
+              entryFee: tournament.entryFee / 100,
+              currency: tournament.currency,
+            }}
+          />
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>

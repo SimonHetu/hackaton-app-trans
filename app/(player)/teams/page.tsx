@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { teamsSearchParamsSchema } from "@/server/validations/pages";
 import { TeamsFilters } from "./teams-filters";
 
 type SearchParams = Promise<{
@@ -16,7 +17,7 @@ export default async function TeamsPage({
 }: {
   searchParams: SearchParams;
 }) {
-  const { city, sport, available } = await searchParams;
+  const { city, sport, available } = teamsSearchParamsSchema.parse(await searchParams);
 
   const teams = await prisma.team.findMany({
     where: {

@@ -1,5 +1,6 @@
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import { idListSchema, idSchema } from "@/server/validations/common";
 
 type CompletedJoinRequestsResult = {
   teamIds: string[];
@@ -9,7 +10,8 @@ export async function completePaidJoinRequests(
   joinRequestIds: string[],
   stripeSessionId: string,
 ): Promise<CompletedJoinRequestsResult> {
-  const uniqueJoinRequestIds = [...new Set(joinRequestIds)];
+  const uniqueJoinRequestIds = [...new Set(idListSchema.parse(joinRequestIds))];
+  const parsedStripeSessionId = idSchema.parse(stripeSessionId);
 
   if (uniqueJoinRequestIds.length === 0) {
     return { teamIds: [] };
@@ -37,7 +39,7 @@ export async function completePaidJoinRequests(
         data: {
           status: "ACCEPTED",
           paymentStatus: "PAID",
-          stripeSessionId,
+          stripeSessionId: parsedStripeSessionId,
           paidAt: new Date(),
         },
       });

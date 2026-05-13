@@ -12,7 +12,7 @@ export default async function Home() {
       <div className="mx-auto flex min-h-screen w-full max-w-5xl flex-col px-6 py-8">
         <header className="flex items-center justify-between border-b border-zinc-200 pb-4">
           <Link href="/" className="text-lg font-semibold">
-            Ligues Sportives
+            Ligues Sportives Tofu
           </Link>
           {isSignedIn ? (
             <div className="flex items-center gap-4">
@@ -46,10 +46,11 @@ export default async function Home() {
           <p className="text-sm font-medium uppercase tracking-wide text-zinc-500">Hackathon</p>
           <div className="max-w-2xl space-y-4">
             <h1 className="text-4xl font-semibold sm:text-5xl">
-              Gestion de ligues sportives communautaires
+              Ligues Sportives Tofu
             </h1>
             <p className="text-lg leading-8 text-zinc-600">
-              Authentification Clerk active, synchronisation utilisateur en base et routes privees protegees.
+              Crée des tournois, organise les équipes, réserve les places disponibles et suis les inscriptions
+              de ta ligue communautaire au même endroit.
             </p>
           </div>
 
@@ -69,10 +70,10 @@ export default async function Home() {
               </Link>
               {canCreateTournament && (
                 <Link
-                  href="/tournaments/new"
+                  href="/tournaments"
                   className="inline-flex h-11 w-fit items-center rounded-md border border-zinc-300 px-5 text-sm font-medium hover:bg-zinc-100"
                 >
-                  Creer un tournoi
+                  Mes tournois
                 </Link>
               )}
               <Link
