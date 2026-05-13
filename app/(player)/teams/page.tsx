@@ -2,6 +2,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { TeamsFilters } from "./teams-filters";
 
 type SearchParams = Promise<{
@@ -40,7 +41,17 @@ export default async function TeamsPage({
 
   return (
     <div className="max-w-5xl mx-auto p-6">
-      <h1 className="text-2xl font-bold mb-6">Rechercher une équipe</h1>
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+        <h1 className="text-2xl font-bold">Rechercher une équipe</h1>
+        <div className="flex flex-wrap gap-2">
+          <Button asChild variant="outline">
+            <Link href="/">Accueil</Link>
+          </Button>
+          <Button asChild>
+            <Link href="/tournaments">Créer une équipe</Link>
+          </Button>
+        </div>
+      </div>
 
       <TeamsFilters />
 
