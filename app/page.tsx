@@ -1,4 +1,4 @@
-import { SignInButton, SignUpButton, UserButton } from "@clerk/nextjs";
+import { UserButton } from "@clerk/nextjs";
 import { auth } from "@clerk/nextjs/server";
 import Link from "next/link";
 
@@ -15,6 +15,9 @@ export default async function Home() {
           </Link>
           {isSignedIn ? (
             <div className="flex items-center gap-4">
+              <Link href="/teams" className="text-sm font-medium text-zinc-700 hover:text-zinc-950">
+                Equipes
+              </Link>
               <Link href="/profile" className="text-sm font-medium text-zinc-700 hover:text-zinc-950">
                 Profil
               </Link>
@@ -28,16 +31,15 @@ export default async function Home() {
             </div>
           ) : (
             <div className="flex items-center gap-3">
-              <SignInButton mode="modal">
-                <button className="text-sm font-medium text-zinc-700 hover:text-zinc-950">
-                  Connexion
-                </button>
-              </SignInButton>
-              <SignUpButton mode="modal">
-                <button className="rounded-md bg-zinc-950 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800">
-                  Creer un compte
-                </button>
-              </SignUpButton>
+              <Link href="/sign-in" className="text-sm font-medium text-zinc-700 hover:text-zinc-950">
+                Connexion
+              </Link>
+              <Link
+                href="/sign-up"
+                className="rounded-md bg-zinc-950 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800"
+              >
+                Creer un compte
+              </Link>
             </div>
           )}
         </header>
@@ -56,8 +58,14 @@ export default async function Home() {
           {isSignedIn ? (
             <div className="flex flex-wrap gap-3">
               <Link
-                href="/profile"
+                href="/teams"
                 className="inline-flex h-11 w-fit items-center rounded-md bg-zinc-950 px-5 text-sm font-medium text-white hover:bg-zinc-800"
+              >
+                Magasiner les equipes
+              </Link>
+              <Link
+                href="/profile"
+                className="inline-flex h-11 w-fit items-center rounded-md border border-zinc-300 px-5 text-sm font-medium hover:bg-zinc-100"
               >
                 Completer mon profil
               </Link>
@@ -76,16 +84,18 @@ export default async function Home() {
             </div>
           ) : (
             <div className="flex flex-wrap gap-3">
-              <SignUpButton mode="modal">
-                <button className="inline-flex h-11 items-center rounded-md bg-zinc-950 px-5 text-sm font-medium text-white hover:bg-zinc-800">
-                  Commencer
-                </button>
-              </SignUpButton>
-              <SignInButton mode="modal">
-                <button className="inline-flex h-11 items-center rounded-md border border-zinc-300 px-5 text-sm font-medium hover:bg-zinc-100">
-                  J&apos;ai deja un compte
-                </button>
-              </SignInButton>
+              <Link
+                href="/sign-up"
+                className="inline-flex h-11 items-center rounded-md bg-zinc-950 px-5 text-sm font-medium text-white hover:bg-zinc-800"
+              >
+                Commencer
+              </Link>
+              <Link
+                href="/sign-in"
+                className="inline-flex h-11 items-center rounded-md border border-zinc-300 px-5 text-sm font-medium hover:bg-zinc-100"
+              >
+                J&apos;ai deja un compte
+              </Link>
             </div>
           )}
         </section>
