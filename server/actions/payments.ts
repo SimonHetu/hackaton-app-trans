@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { Prisma } from "@prisma/client";
 import { z } from "zod";
 import { requireAuth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
@@ -27,83 +28,106 @@ function formDataToCartItemInput(formData: FormData) {
   };
 }
 
+type AddTeamToCartResult =
+  | { type: "already-member"; teamId: string }
+  | { type: "accepted"; teamId: string }
+  | { type: "requested"; teamId: string }
+  | { type: "added"; teamId: string };
+
 export async function addTeamToCart(input: z.infer<typeof checkoutSchema> | FormData) {
   const user = await requireAuth();
   const { teamId } = checkoutSchema.parse(input instanceof FormData ? formDataToCheckoutInput(input) : input);
 
-  const team = await prisma.team.findUnique({
-    where: { id: teamId },
-    include: {
-      tournament: true,
-      members: { where: { id: user.id }, select: { id: true } },
-      _count: { select: { members: true } },
-    },
-  });
+  const result = await prisma.$transaction<AddTeamToCartResult>(
+    async (tx) => {
+      const lockedTeams = await tx.$queryRaw<Array<{ id: string }>>`
+        SELECT id FROM "Team" WHERE id = ${teamId} FOR UPDATE
+      `;
 
-  if (!team) {
-    throw new Error("Team not found.");
-  }
+      if (lockedTeams.length === 0) {
+        throw new Error("Team not found.");
+      }
 
-  if (team.members.length > 0) {
-    redirect(`/teams/${team.id}?status=already-member`);
-  }
+      const team = await tx.team.findUnique({
+        where: { id: teamId },
+        include: {
+          tournament: true,
+          members: { where: { id: user.id }, select: { id: true } },
+          _count: { select: { members: true } },
+        },
+      });
 
-  if (team._count.members >= team.maxCapacity) {
-    throw new Error("Team is full.");
-  }
+      if (!team) {
+        throw new Error("Team not found.");
+      }
 
-  const existingRequest = await prisma.joinRequest.findUnique({
-    where: { playerId_teamId: { playerId: user.id, teamId: team.id } },
-  });
+      if (team.members.length > 0) {
+        return { type: "already-member", teamId: team.id };
+      }
 
-  if (existingRequest?.status === "ACCEPTED") {
-    redirect(`/teams/${team.id}?status=accepted`);
-  }
+      const existingRequest = await tx.joinRequest.findUnique({
+        where: { playerId_teamId: { playerId: user.id, teamId: team.id } },
+      });
 
-  const requiresPayment = team.tournament.entryFee > 0;
+      if (existingRequest?.status === "ACCEPTED") {
+        return { type: "accepted", teamId: team.id };
+      }
 
-  if (!requiresPayment) {
-    await prisma.joinRequest.upsert({
-      where: { playerId_teamId: { playerId: user.id, teamId: team.id } },
-      create: {
-        playerId: user.id,
+      const pendingReservations = await tx.joinRequest.count({
+        where: {
+          teamId: team.id,
+          playerId: { not: user.id },
+          status: "PENDING",
+        },
+      });
+
+      if (team._count.members + pendingReservations >= team.maxCapacity) {
+        throw new Error("Team is full.");
+      }
+
+      const requiresPayment = team.tournament.entryFee > 0;
+
+      await tx.joinRequest.upsert({
+        where: { playerId_teamId: { playerId: user.id, teamId: team.id } },
+        create: {
+          playerId: user.id,
+          teamId: team.id,
+          status: "PENDING",
+          paymentStatus: requiresPayment ? "PENDING" : "NOT_REQUIRED",
+        },
+        update: {
+          status: "PENDING",
+          paymentStatus: requiresPayment ? "PENDING" : "NOT_REQUIRED",
+          stripeSessionId: null,
+          paidAt: null,
+        },
+      });
+
+      return {
+        type: requiresPayment ? "added" : "requested",
         teamId: team.id,
-        status: "PENDING",
-        paymentStatus: "NOT_REQUIRED",
-      },
-      update: {
-        status: "PENDING",
-        paymentStatus: "NOT_REQUIRED",
-        stripeSessionId: null,
-        paidAt: null,
-      },
-    });
+      };
+    },
+    { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
+  );
 
-    revalidatePath("/teams");
-    revalidatePath(`/teams/${team.id}`);
-    redirect(`/teams/${team.id}?status=requested`);
+  revalidatePath("/teams");
+  revalidatePath(`/teams/${result.teamId}`);
+
+  if (result.type === "already-member") {
+    redirect(`/teams/${result.teamId}?status=already-member`);
   }
 
-  await prisma.joinRequest.upsert({
-    where: { playerId_teamId: { playerId: user.id, teamId: team.id } },
-    create: {
-      playerId: user.id,
-      teamId: team.id,
-      status: "PENDING",
-      paymentStatus: "PENDING",
-    },
-    update: {
-      status: "PENDING",
-      paymentStatus: "PENDING",
-      paidAt: null,
-      stripeSessionId: null,
-    },
-  });
+  if (result.type === "accepted") {
+    redirect(`/teams/${result.teamId}?status=accepted`);
+  }
+
+  if (result.type === "requested") {
+    redirect(`/teams/${result.teamId}?status=requested`);
+  }
 
   revalidatePath("/cart");
-  revalidatePath("/teams");
-  revalidatePath(`/teams/${team.id}`);
-  redirect(`/cart?status=added`);
+  redirect("/cart?status=added");
 }
 
 export async function createCartCheckoutSession() {
