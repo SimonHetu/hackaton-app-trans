@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { prisma } from "@/lib/prisma";
 import { getStripe } from "@/lib/stripe";
+import { completePaidJoinRequests } from "@/server/services/join-requests";
 
 type PaymentSuccessPageProps = {
   searchParams: Promise<{ session_id?: string }>;
@@ -21,14 +22,7 @@ export default async function PaymentSuccessPage({ searchParams }: PaymentSucces
         : [];
 
     if (joinRequestIds.length > 0 && session.payment_status === "paid") {
-      await prisma.joinRequest.updateMany({
-        where: { id: { in: joinRequestIds } },
-        data: {
-          paymentStatus: "PAID",
-          stripeSessionId: session.id,
-          paidAt: new Date(),
-        },
-      });
+      await completePaidJoinRequests(joinRequestIds, session.id);
 
       const firstJoinRequest = await prisma.joinRequest.findFirst({
         where: { id: { in: joinRequestIds } },
@@ -47,7 +41,7 @@ export default async function PaymentSuccessPage({ searchParams }: PaymentSucces
           <CardTitle>Merci, ton paiement a ete recu.</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4 text-sm text-muted-foreground">
-          <p>Ta demande d&apos;adhesion est maintenant marquee comme payee.</p>
+          <p>Ta demande d&apos;adhesion est acceptee et tu as ete ajoute a l&apos;equipe.</p>
           <Link href={teamId ? `/teams/${teamId}` : "/teams"} className="font-medium text-foreground hover:underline">
             Retourner a l&apos;equipe
           </Link>

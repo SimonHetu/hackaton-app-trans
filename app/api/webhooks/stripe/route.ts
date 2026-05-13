@@ -1,6 +1,7 @@
 import { headers } from "next/headers";
-import { prisma } from "@/lib/prisma";
+import { revalidatePath } from "next/cache";
 import { getStripe } from "@/lib/stripe";
+import { completePaidJoinRequests } from "@/server/services/join-requests";
 
 export const runtime = "nodejs";
 
@@ -36,14 +37,13 @@ export async function POST(req: Request) {
         : [];
 
     if (joinRequestIds.length > 0 && session.payment_status === "paid") {
-      await prisma.joinRequest.updateMany({
-        where: { id: { in: joinRequestIds } },
-        data: {
-          paymentStatus: "PAID",
-          stripeSessionId: session.id,
-          paidAt: new Date(),
-        },
-      });
+      const { teamIds } = await completePaidJoinRequests(joinRequestIds, session.id);
+
+      revalidatePath("/cart");
+      revalidatePath("/teams");
+      for (const teamId of teamIds) {
+        revalidatePath(`/teams/${teamId}`);
+      }
     }
   }
 

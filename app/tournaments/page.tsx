@@ -19,9 +19,14 @@ export default async function TournamentsPage() {
     <div className="max-w-5xl mx-auto p-6">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold">Mes tournois</h1>
-        <Button asChild>
-          <Link href="/tournaments/new">+ Créer un tournoi</Link>
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <Button asChild variant="outline">
+            <Link href="/">Accueil</Link>
+          </Button>
+          <Button asChild>
+            <Link href="/tournaments/new">+ Créer un tournoi</Link>
+          </Button>
+        </div>
       </div>
 
       {tournaments.length === 0 ? (

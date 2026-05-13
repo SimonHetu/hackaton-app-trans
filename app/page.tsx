@@ -1,10 +1,11 @@
 import { UserButton } from "@clerk/nextjs";
-import { auth } from "@clerk/nextjs/server";
 import Link from "next/link";
+import { getCurrentUser } from "@/lib/auth";
 
 export default async function Home() {
-  const { userId } = await auth();
-  const isSignedIn = Boolean(userId);
+  const user = await getCurrentUser();
+  const isSignedIn = Boolean(user);
+  const canCreateTournament = user?.role === "ORGANIZER" || user?.role === "ADMIN";
 
   return (
     <main className="min-h-screen bg-zinc-50 text-zinc-950">
@@ -23,9 +24,6 @@ export default async function Home() {
               </Link>
               <Link href="/cart" className="text-sm font-medium text-zinc-700 hover:text-zinc-950">
                 Panier
-              </Link>
-              <Link href="/dashboard" className="text-sm font-medium text-zinc-700 hover:text-zinc-950">
-                Dashboard
               </Link>
               <UserButton />
             </div>
@@ -69,12 +67,14 @@ export default async function Home() {
               >
                 Completer mon profil
               </Link>
-              <Link
-                href="/dashboard"
-                className="inline-flex h-11 w-fit items-center rounded-md border border-zinc-300 px-5 text-sm font-medium hover:bg-zinc-100"
-              >
-                Ouvrir le dashboard
-              </Link>
+              {canCreateTournament && (
+                <Link
+                  href="/tournaments/new"
+                  className="inline-flex h-11 w-fit items-center rounded-md border border-zinc-300 px-5 text-sm font-medium hover:bg-zinc-100"
+                >
+                  Creer un tournoi
+                </Link>
+              )}
               <Link
                 href="/cart"
                 className="inline-flex h-11 w-fit items-center rounded-md border border-zinc-300 px-5 text-sm font-medium hover:bg-zinc-100"

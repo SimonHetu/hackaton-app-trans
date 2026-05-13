@@ -78,9 +78,14 @@ export default async function TeamDetailsPage({
     <main className="mx-auto max-w-4xl space-y-6 p-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <Link href="/teams" className="text-sm text-muted-foreground hover:underline">
-            Retour aux equipes
-          </Link>
+          <div className="flex flex-wrap gap-3 text-sm text-muted-foreground">
+            <Link href="/" className="hover:underline">
+              Accueil
+            </Link>
+            <Link href="/teams" className="hover:underline">
+              Retour aux equipes
+            </Link>
+          </div>
           <h1 className="mt-2 text-2xl font-bold">{team.name}</h1>
           <p className="mt-1 text-sm text-muted-foreground">
             {team.tournament.name} · {team.tournament.sport} · {team.tournament.city}
